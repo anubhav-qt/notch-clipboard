@@ -34,11 +34,9 @@ https://github.com/user-attachments/assets/f0c956b4-1e33-4199-9428-56abc49ae804
 
 ### From the release
 
-1. Download `Notch-Clipboard-v1.zip` from the
-   [v1 release](https://github.com/anubhav-qt/notch-clipboard/releases/tag/v1).
-2. Unzip it and move `Notch Clipboard.app` to your Applications folder.
-3. Open it. The app is not notarized, so macOS may block it the first time.
-   If it does, open System Settings > Privacy & Security and choose Open Anyway.
+Download it from the [v1 release](https://github.com/anubhav-qt/notch-clipboard/releases/tag/v1).
+That page has step-by-step install instructions for everyone.
+The app is not notarized, so the first open needs Open Anyway in System Settings > Privacy & Security.
 
 The release app does not change your screenshot shortcuts or start at login.
 Build from source for those.
