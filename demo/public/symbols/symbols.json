@@ -1,0 +1,62 @@
+{
+  "arrow.counterclockwise" : [
+    104,
+    122
+  ],
+  "bookmark" : [
+    102,
+    122
+  ],
+  "bookmark.fill" : [
+    102,
+    122
+  ],
+  "checkmark" : [
+    113,
+    103
+  ],
+  "checkmark.rectangle.stack" : [
+    128,
+    133
+  ],
+  "chevron.down" : [
+    113,
+    69
+  ],
+  "circle.grid.3x3.fill" : [
+    126,
+    113
+  ],
+  "gearshape" : [
+    122,
+    122
+  ],
+  "magnifyingglass" : [
+    118,
+    114
+  ],
+  "paintpalette" : [
+    135,
+    115
+  ],
+  "pencil" : [
+    101,
+    96
+  ],
+  "plus" : [
+    107,
+    99
+  ],
+  "trash" : [
+    110,
+    126
+  ],
+  "xmark" : [
+    104,
+    97
+  ],
+  "xmark.circle.fill" : [
+    117,
+    117
+  ]
+}

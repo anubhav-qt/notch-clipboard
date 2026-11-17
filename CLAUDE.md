@@ -14,6 +14,8 @@ history panel. Built with plain `swiftc` (no Xcode project), targets macOS 14.
 - `docs/redesign-plan.md`: agreed 1.2 design (replaced in parts by 1.3).
 - `docs/plan-1.3.md`: 1.3 spec and decisions, built and installed.
 - `docs/handoff-prompt.md`: exact state of the 1.3 work and what is left.
+- `demo/`: Remotion demo video, drawn in React from the components' numbers.
+  `npm run setup` (fonts, symbols), `npm run render` writes `demo/out/`. Story in `src/script.ts`.
 - 1.3 files: `CategoryList` (list, tabs, edit draft), `ClipSorting` (model sorting),
   `ClipSelection` (Select mode picks).
 
@@ -34,4 +36,4 @@ history panel. Built with plain `swiftc` (no Xcode project), targets macOS 14.
   tabs sit right of search, text only. Reorder history is off by default.
 - Icon colour checks in UIInputTests read the screen (`screenImage`): offscreen
   `cacheDisplay` paints the palette symbol white under the panel clip.
-- Git: one commit "feat: pushing v1", tag v1. `release/` (ignored) holds the v1 zip and sha256.
+- Git: main on github.com/anubhav-qt/notch-clipboard (public, MIT), tag v1. `release/` (ignored) holds the v1 zip and sha256.
