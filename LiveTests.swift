@@ -1,6 +1,6 @@
 import AppKit
 
-/// Checks the installed, running app: menu opening, outside clicks, pointer exit and the Clear sheet.
+/// Checks the installed, running app: menu opening, outside clicks, pointer exit, the Clear sheet and notch hover speed.
 /// Never presses Clear History, so real history is untouched.
 @main struct LiveTests {
     @MainActor static func main() {
@@ -128,5 +128,29 @@ import AppKit
         click(at: panelPoint(40, titleY))
         press(53)
         check("Escape closes the panel", !isOpen())
+
+        // Away from the notch the app checks the pointer ten times a second; pointer events still arrive at once.
+        let notchPoint = CGPoint(x: NSScreen.screens.first!.frame.midX, y: 1)
+        func secondsUntilOpen() -> TimeInterval {
+            let start = ProcessInfo.processInfo.systemUptime
+            while !isOpen() && ProcessInfo.processInfo.systemUptime - start < 1 {
+                pump(0.005)
+            }
+            return ProcessInfo.processInfo.systemUptime - start
+        }
+        move(to: outside)
+        pump(0.5)
+        CGWarpMouseCursorPosition(notchPoint)
+        let silentJump = secondsUntilOpen()
+        check("a jump to the notch with no move event still opens it in \(Int(silentJump * 1000)) ms", silentJump < 0.25)
+        move(to: outside)
+        check("leaving the notch-opened panel closes it", !isOpen())
+        pump(0.5)
+        CGWarpMouseCursorPosition(notchPoint)
+        CGEvent(mouseEventSource: nil, mouseType: .mouseMoved, mouseCursorPosition: notchPoint, mouseButton: .left)?.post(tap: .cghidEventTap)
+        let movedJump = secondsUntilOpen()
+        check("a move onto the notch opens it in \(Int(movedJump * 1000)) ms", movedJump < 0.1)
+        move(to: outside)
+        check("and leaving closes it again", !isOpen())
     }
 }

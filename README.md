@@ -19,8 +19,11 @@ https://github.com/user-attachments/assets/f0c956b4-1e33-4199-9428-56abc49ae804
 - **Image titles.** On macOS 27 each image gets a short title and a category too.
 - **Select mode** picks several clips. Text is pasted as one, joined with a space.
   Images are copied as separate items. Text and images can't be mixed.
-- **Your accent colour**, from presets or any hue.
+- **Your accent colour**, any colour at all: presets, a shade square, a hue bar or a hex code.
 - **Reorder history** (off by default) moves a clip to the top when you copy it again.
+- **Save images as files** (off by default) keeps each copied image as a PNG in
+  Pictures › Notch Clipboard, and pastes image clips as that file too.
+- **Light on your Mac.** It checks the pointer quickly only near the notch, so it barely wakes the CPU.
 
 ## Requirements
 
@@ -34,7 +37,7 @@ https://github.com/user-attachments/assets/f0c956b4-1e33-4199-9428-56abc49ae804
 
 ### From the release
 
-Download it from the [v1 release](https://github.com/anubhav-qt/notch-clipboard/releases/tag/v1).
+Download it from the [latest release](https://github.com/anubhav-qt/notch-clipboard/releases/latest).
 That page has step-by-step install instructions for everyone.
 The app is not notarized, so the first open needs Open Anyway in System Settings > Privacy & Security.
 

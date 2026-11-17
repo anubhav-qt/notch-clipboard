@@ -10,19 +10,25 @@ export SDKROOT="$(xcrun --sdk macosx --show-sdk-path)"
 source "$PROJECT_DIR/sources.zsh"
 
 # Each test program is compiled with only the code it needs, then run.
+# "./test.sh ImageFilesTests" runs just that one.
+ONLY="${1:-}"
 run_test() {
   local name="$1"
   shift
+  if [[ -n "$ONLY" && "$name" != "$ONLY" ]]; then
+    return
+  fi
   xcrun swiftc $SWIFT_TARGET -parse-as-library -plugin-path "$SWIFT_PLUGIN_DIR" "$@" -o "$TEST_DIR/$name"
   "$TEST_DIR/$name" "$TEST_DIR"
 }
 
-run_test ClipboardTests "$PROJECT_DIR/ClipCategory.swift" "$PROJECT_DIR/ClipboardStore.swift" "$PROJECT_DIR/Tests.swift"
+run_test ClipboardTests "$PROJECT_DIR/ClipCategory.swift" "$PROJECT_DIR/ClipboardStore.swift" "$PROJECT_DIR/ImageFiles.swift" "$PROJECT_DIR/Tests.swift"
 run_test ClipboardAgeTests "$PROJECT_DIR/ClipboardAge.swift" "$PROJECT_DIR/ClipboardAgeTests.swift"
 run_test MonitorScheduleTests "$PROJECT_DIR/MonitorSchedule.swift" "$PROJECT_DIR/MonitorScheduleTests.swift"
 run_test HoverDismissalTests "$PROJECT_DIR/HoverDismissal.swift" "$PROJECT_DIR/HoverDismissalTests.swift"
 run_test ModelTests $LIBRARY_SOURCES "$PROJECT_DIR/ModelTests.swift"
 run_test CategoryTests $LIBRARY_SOURCES "$PROJECT_DIR/CategoryTests.swift"
-run_test CategoryListTests "$PROJECT_DIR/ClipCategory.swift" "$PROJECT_DIR/CategoryList.swift" "$PROJECT_DIR/ClipboardStore.swift" "$PROJECT_DIR/ClipCategorizer.swift" "$PROJECT_DIR/CategoryListTests.swift" -framework PDFKit
+run_test CategoryListTests "$PROJECT_DIR/ClipCategory.swift" "$PROJECT_DIR/CategoryList.swift" "$PROJECT_DIR/ClipboardStore.swift" "$PROJECT_DIR/ImageFiles.swift" "$PROJECT_DIR/ClipCategorizer.swift" "$PROJECT_DIR/CategoryListTests.swift" -framework PDFKit
 run_test SelectionTests $LIBRARY_SOURCES "$PROJECT_DIR/SelectionTests.swift"
 run_test AccentTests $LIBRARY_SOURCES "$PROJECT_DIR/AccentTests.swift"
+run_test ImageFilesTests $LIBRARY_SOURCES "$PROJECT_DIR/ImageFilesTests.swift"

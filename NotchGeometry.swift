@@ -16,4 +16,10 @@ struct NotchGeometry {
         // The cursor can sit exactly on the display's top edge (maxY).
         point.x >= rect.minX && point.x < rect.maxX && point.y >= rect.minY && point.y <= rect.maxY
     }
+    /// The area around the notch where the pointer may be heading for it.
+    func isNear(_ point: NSPoint) -> Bool {
+        let around = rect.insetBy(dx: -Self.nearMargin, dy: -Self.nearMargin)
+        return around.contains(point)
+    }
+    static let nearMargin: CGFloat = 160
 }

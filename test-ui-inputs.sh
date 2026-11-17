@@ -11,4 +11,4 @@ source "$PROJECT_DIR/sources.zsh"
 # Clicks and types into a test copy of the panel. Moves the pointer briefly; uses a private clipboard.
 cd "$PROJECT_DIR"
 xcrun swiftc $SWIFT_TARGET -parse-as-library -plugin-path "$SWIFT_PLUGIN_DIR" $LIBRARY_SOURCES "$PROJECT_DIR/UIInputTests.swift" -o "$TEST_DIR/UIInputTests"
-"$TEST_DIR/UIInputTests" "$TEST_DIR"
+"$TEST_DIR/UIInputTests" "$TEST_DIR" "$@"

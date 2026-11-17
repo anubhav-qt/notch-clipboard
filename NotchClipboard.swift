@@ -20,6 +20,7 @@ private enum KeyCode {
     private var revealView: NotchRevealView!
     private var status: NSStatusItem!
     private var timer: Timer?
+    private var tickInterval: TimeInterval = 0
     private var localMonitor: Any?
     private var globalMonitor: Any?
     private var activeScreen: NSScreen?
@@ -116,7 +117,20 @@ private enum KeyCode {
         NotificationCenter.default.addObserver(self, selector: #selector(activeSpaceChanged(_:)), name: NSApplication.didChangeScreenParametersNotification, object: nil)
         let screenLocked = NSNotification.Name("com.apple.screenIsLocked")
         DistributedNotificationCenter.default().addObserver(self, selector: #selector(sessionResigned), name: screenLocked, object: nil)
-        let timer = Timer(timeInterval: 1.0 / 120.0, target: self, selector: #selector(tick), userInfo: nil, repeats: true)
+        updatePace(mouse: NSEvent.mouseLocation)
+    }
+
+    /// Runs the loop fast only while the panel is open or the pointer is near a notch.
+    private func updatePace(mouse: NSPoint) {
+        let nearNotch = notchTargets.contains { $0.geometry.isNear(mouse) }
+        let interval = MonitorSchedule.interval(panelOpen: isOpen, nearNotch: nearNotch)
+        if interval == tickInterval {
+            return
+        }
+        tickInterval = interval
+        timer?.invalidate()
+        let timer = Timer(timeInterval: interval, target: self, selector: #selector(tick), userInfo: nil, repeats: true)
+        timer.tolerance = interval / 5
         RunLoop.main.add(timer, forMode: .common)
         self.timer = timer
     }
@@ -244,7 +258,7 @@ private enum KeyCode {
 
     @objc private func tick() {
         let due = schedule.advance(to: ProcessInfo.processInfo.systemUptime)
-        if due.gap > 0.1 {
+        if MonitorSchedule.isStall(gap: due.gap, interval: tickInterval) {
             timingLog.record("heartbeat_gap", fields: ["duration_ms": due.gap * 1000, "panel_open": isOpen])
         }
         processHover()
@@ -269,6 +283,7 @@ private enum KeyCode {
         } else {
             openIfPointerAtNotch(mouse: mouse)
         }
+        updatePace(mouse: mouse)
     }
 
     private func trackOpenPanel(mouse: NSPoint) {

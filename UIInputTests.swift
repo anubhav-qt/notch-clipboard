@@ -250,6 +250,18 @@ extension CGRect {
         for index in 4..<7 {
             assert(titleRow[index + 1].x > titleRow[index].x)
         }
+        // "./test-ui-inputs.sh palette" or "settings" runs only those clicks.
+        let only = CommandLine.arguments.dropFirst(2).first
+        if only == "palette" {
+            try paletteTests(h, titleRow: titleRow)
+            h.model.shutdown()
+            return
+        }
+        if only == "settings" {
+            try settingsTests(h, gear: titleRow[7])
+            h.model.shutdown()
+            return
+        }
         try searchTests(h)
         try filterTests(h, titleRow: titleRow)
         try rowTests(h, titleRow: titleRow)
@@ -601,7 +613,7 @@ extension CGRect {
         assert(model.openMenu == .settings, "The gear opens settings")
         try h.snapshot("settings-menu")
         let rows = menuRows(h)
-        assert(rows.count == 2, "Reorder history and Quit: \(rows.count)")
+        assert(rows.count == 3, "Reorder history, Save images as files and Quit: \(rows.count)")
         assert(!model.reordersHistory)
         h.tap(rows[0].centre)
         assert(model.reordersHistory && h.defaults.bool(forKey: ClipboardModel.reorderKey), "The switch turns reordering on")
@@ -617,7 +629,21 @@ extension CGRect {
         h.tap(gear)
         h.tap(menuRows(h)[0].centre)
         assert(!model.reordersHistory)
+        assert(!model.savesImagesAsFiles, "Save images as files starts off")
         h.tap(menuRows(h)[1].centre)
+        assert(model.savesImagesAsFiles && h.defaults.bool(forKey: ClipboardModel.imageFilesKey), "The switch turns image files on")
+        assert(model.store?.savesImagesAsFiles == true, "and the store uses it")
+        assert(!model.reordersHistory, "Only its own switch moves")
+        assert(model.openMenu == .settings, "and the menu stays open")
+        try h.snapshot("settings-image-files-on")
+        h.tap(menuRows(h)[1].centre, count: 2)
+        assert(model.savesImagesAsFiles, "A double click flips twice")
+        for _ in 0..<7 {
+            h.tap(menuRows(h)[1].centre, settle: 0.03)
+        }
+        h.pump()
+        assert(!model.savesImagesAsFiles && !h.defaults.bool(forKey: ClipboardModel.imageFilesKey), "Seven fast taps end off")
+        h.tap(menuRows(h)[2].centre)
         assert(h.quits == 1, "Quit Clipboard quits")
         h.tap(gear)
         h.pump()
@@ -625,7 +651,7 @@ extension CGRect {
             h.tap(gear)
         }
         assert(model.openMenu == nil)
-        print("PASS: settings opens under the gear, Reorder history switches and is used, Quit quits")
+        print("PASS: settings opens under the gear, Reorder history and Save images as files switch (taps, double, fast), Quit quits")
     }
 
     @MainActor static func selectTests(_ h: Harness, selectIcon: CGPoint) throws {
@@ -698,28 +724,120 @@ extension CGRect {
         try h.snapshot("accent-picker")
         let swatches = h.controls().filter { $0.width == 20 && $0.height == 20 }.sorted { $0.minX < $1.minX }
         assert(swatches.count == AccentColor.presets.count, "One swatch per preset: \(swatches.count)")
-        h.click(10, 200)
-        let rest = try h.screenImage()
-        assert(Self.isGrey(rest, around: titleRow[5], in: h), "A closed icon is plain grey, not multicolour")
-        let reset = h.line(at: swatches[0].midY).last!.centre
-        let hueStart = swatches.last!.maxX + 8
-        let hueEnd = reset.x - 14 - 8
+        let resetRect = h.line(at: swatches[0].midY).last!
+        let reset = resetRect.centre
+        let hexBox = h.textFields().first { abs($0.rect.midY - swatches[0].midY) < 6 }!
+        let hex = hexBox.rect.centre
+        assert(hexBox.rect.maxX < resetRect.minX, "The hex box sits left of reset: \(hexBox.rect)")
+        let wide = h.controls().filter { $0.width > 300 && $0.minY > swatches[0].maxY }.sorted { $0.minY < $1.minY }
+        let square = wide[0]
+        let bar = wide[1]
+        assert(square.height == ShadeSquare.height, "The shade square sits under the swatches: \(square)")
+        assert(bar.height == 20 && bar.minY > square.maxY, "The hue bar sits under the square: \(bar)")
+        assert(abs(square.minX - swatches[0].minX) < 1 && abs(square.maxX - resetRect.maxX) < 1, "Square spans the picker")
+
         for (index, preset) in AccentColor.presets.enumerated() {
             h.tap(swatches[index].centre)
             assert(model.accent == preset.color, "\(preset.name) swatch picks \(preset.name)")
         }
-        assert(h.defaults.string(forKey: ClipboardModel.accentKey) == AccentColor.presets.last!.color.hex, "The pick is stored")
+        assert(model.accent.hex == "#FFFFFF", "The last swatch is white")
+        assert(h.defaults.string(forKey: ClipboardModel.accentKey) == "#FFFFFF", "The pick is stored")
+        h.tap(swatches.last!.centre, count: 2)
+        assert(model.accent.hex == "#FFFFFF", "A double click on a swatch is harmless")
+
         func hue(of accent: AccentColor) -> Double {
-            Double(NSColor(red: accent.red, green: accent.green, blue: accent.blue, alpha: 1).hueComponent)
+            AccentShade(accent).hue
         }
-        h.click((hueStart + hueEnd) / 2, swatches[0].midY)
-        assert(abs(hue(of: model.accent) - 0.5) < 0.03, "Middle of the hue bar is cyan: \(hue(of: model.accent))")
-        h.click(hueStart + 1, swatches[0].midY)
+        // White has no hue; picking one brings back a soft colour instead of doing nothing.
+        h.click((bar.minX + bar.maxX) / 2, bar.midY)
+        assert(abs(hue(of: model.accent) - 0.5) < 0.03, "Middle of the hue bar is cyan: \(model.accent.hex)")
+        assert(abs(AccentShade(model.accent).saturation - AccentShade.softSaturation) < 0.03, "A hue on white shows up soft")
+        h.click(bar.minX + 1, bar.midY)
         let start = hue(of: model.accent)
         assert(start < 0.03 || start > 0.97, "Left end is red: \(start)")
-        h.drag(from: CGPoint(x: hueStart + 2, y: swatches[0].midY), to: CGPoint(x: hueEnd + 60, y: swatches[0].midY), steps: 10)
+        h.drag(from: CGPoint(x: bar.minX + 2, y: bar.midY), to: CGPoint(x: bar.maxX + 60, y: bar.midY), steps: 10)
         let end = hue(of: model.accent)
         assert(end > 0.97 || end < 0.03, "Dragging past the right end stops at the last hue: \(end)")
+
+        h.tap(CGPoint(x: (bar.minX + bar.maxX) / 2, y: bar.midY))
+        h.drag(from: CGPoint(x: square.midX, y: square.midY), to: CGPoint(x: square.minX - 40, y: square.minY - 40), steps: 8)
+        assert(model.accent.hex == "#FFFFFF", "Dragging past the square's top left stops at white: \(model.accent.hex)")
+        h.drag(from: CGPoint(x: square.midX, y: square.midY), to: CGPoint(x: square.maxX + 40, y: square.maxY + 40), steps: 8)
+        assert(model.accent.hex == "#000000", "Dragging past the bottom right stops at black: \(model.accent.hex)")
+        h.click(square.maxX - 1, square.minY + 1)
+        let vivid = AccentShade(model.accent)
+        assert(vivid.saturation > 0.97 && vivid.brightness > 0.97 && abs(vivid.hue - 0.5) < 0.03, "Black kept the hue; top right is full cyan: \(model.accent.hex)")
+        h.click(square.midX, square.midY, count: 2)
+        let middle = AccentShade(model.accent)
+        assert(abs(middle.saturation - 0.5) < 0.05 && abs(middle.brightness - 0.5) < 0.05, "The middle is half strength, half bright")
+        h.click(square.minX + 1, square.midY)
+        let greyShade = AccentShade(model.accent)
+        assert(greyShade.saturation < 0.03 && abs(greyShade.brightness - 0.5) < 0.05, "The left edge is grey: \(model.accent.hex)")
+
+        func typeHex(_ text: String, submit: Bool) {
+            h.tap(hex)
+            // The app's Edit menu turns Command-A into this; the test panel has no menu.
+            let editor = h.panel.firstResponder as? NSTextView
+            assert(editor != nil, "Clicking the hex box puts the cursor in it")
+            editor?.selectAll(nil)
+            h.type(text)
+            if submit {
+                h.press(36)
+            }
+        }
+        typeHex("ffffff", submit: false)
+        assert(model.accent.hex == "#FFFFFF", "Six digits apply while typing: \(model.accent.hex)")
+        typeHex("12", submit: true)
+        assert(model.accent.hex == "#FFFFFF", "A half colour on Return changes nothing")
+        typeHex("#0f0", submit: true)
+        assert(model.accent.hex == "#00FF00", "Short hex applies on Return: \(model.accent.hex)")
+        typeHex("  zz#ab cd ef9", submit: false)
+        assert(model.accent.hex == "#ABCDEF", "Odd characters are dropped: \(model.accent.hex)")
+        typeHex("1234567890", submit: true)
+        assert(model.accent.hex == "#123456", "Only six digits fit: \(model.accent.hex)")
+        typeHex("💥🎨", submit: true)
+        assert(model.accent.hex == "#123456", "Emoji change nothing")
+        typeHex("", submit: false)
+        h.press(51, times: 8)
+        h.press(36)
+        assert(model.accent.hex == "#123456", "An empty box on Return changes nothing")
+        typeHex("000000", submit: true)
+        assert(model.accent.hex == "#000000", "Black can be typed")
+        h.tap(hex, count: 2)
+        typeHex("FFF", submit: true)
+        assert(model.accent.hex == "#FFFFFF", "White can be typed")
+        h.tap(swatches[0].centre)
+        typeHex("ABC", submit: false)
+        h.tap(swatches[3].centre)
+        assert(model.accent == AccentColor.presets[3].color, "A swatch wins over a half-typed box")
+        typeHex("fff", submit: false)
+        h.tap(swatches[3].centre)
+        h.pump(0.2)
+        assert(model.accent == AccentColor.presets[3].color, "A short box applied on leaving does not undo the swatch")
+
+        // Screen captures take keyboard focus from the test panel, so they come after all typing.
+        h.click(10, 200)
+        let rest = try h.screenImage()
+        assert(Self.isGrey(rest, around: titleRow[5], in: h), "A closed icon is plain grey, not multicolour")
+        h.tap(swatches.last!.centre)
+        h.pump(0.2)
+        let whiteRep = try h.screenImage()
+        let whiteScale = CGFloat(whiteRep.pixelsWide) / h.host.bounds.width
+        func isWhite(_ point: CGPoint) -> Bool {
+            for dx in stride(from: CGFloat(-6), through: 6, by: 1) {
+                for dy in stride(from: CGFloat(-6), through: 6, by: 1) {
+                    let pixel = whiteRep.colorAt(x: Int((point.x + dx) * whiteScale), y: Int((point.y + dy) * whiteScale))!.usingColorSpace(.sRGB)!
+                    if pixel.brightnessComponent > 0.6 && pixel.saturationComponent < 0.08 {
+                        return true
+                    }
+                }
+            }
+            return false
+        }
+        let whiteSegment = h.controls().first { abs($0.midX - titleRow[0].x) < 2 && abs($0.midY - titleRow[0].y) < 2 }!
+        assert(isWhite(CGPoint(x: whiteSegment.minX + 3, y: whiteSegment.midY)), "A white accent paints the filter outline white")
+        try h.snapshot("accent-white")
+
         h.tap(swatches[3].centre)
         h.pump(0.2)
         let lime = AccentColor.presets[3].color
@@ -752,7 +870,7 @@ extension CGRect {
         assert(Self.isGrey(closed, around: palette, in: h), "The closed palette is plain grey, not multicolour")
         h.tap(palette, count: 2)
         assert(!model.isPickingAccent, "A double click opens and closes it")
-        print("PASS: palette opens and closes, every swatch, hue bar click and drag past the end, tint applied, reset and double clicks")
+        print("PASS: palette: every swatch incl. white, shade square corners and drags past edges, hue bar on white, hex typing edge cases, tint, reset, double clicks")
     }
 
     /// True when no strongly coloured pixel sits near the point.

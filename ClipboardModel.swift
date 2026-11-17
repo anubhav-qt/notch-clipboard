@@ -57,6 +57,12 @@ enum PanelMenu {
             store?.reordersHistory = reordersHistory
         }
     }
+    @Published var savesImagesAsFiles: Bool {
+        didSet {
+            defaults.set(savesImagesAsFiles, forKey: Self.imageFilesKey)
+            store?.savesImagesAsFiles = savesImagesAsFiles
+        }
+    }
     /// Select mode's picks; nil while Select mode is off.
     @Published private(set) var selection: ClipSelection?
     @Published private(set) var selectionNote: String?
@@ -82,6 +88,7 @@ enum PanelMenu {
     var noteDuration: TimeInterval = 2.5
     static let accentKey = "accentColor"
     static let reorderKey = "reorderHistory"
+    static let imageFilesKey = "saveImagesAsFiles"
     private let imageCache = NSCache<NSString, NSImage>()
     var selected: (() -> Void)?
     var removalRequested: (() -> Void)?
@@ -107,7 +114,9 @@ enum PanelMenu {
         accent = savedAccent
         categoryList = CategoryList.load(from: defaults)
         reordersHistory = defaults.bool(forKey: Self.reorderKey)
+        savesImagesAsFiles = defaults.bool(forKey: Self.imageFilesKey)
         self.store?.reordersHistory = reordersHistory
+        self.store?.savesImagesAsFiles = savesImagesAsFiles
         reload()
         sortNext()
     }

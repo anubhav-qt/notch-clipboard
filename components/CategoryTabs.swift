@@ -59,10 +59,30 @@ struct MoreMenu: View {
     }
 }
 
-/// Behind the gear: the Reorder history switch and Quit.
+/// Behind the gear: the Reorder history and Save images as files switches, and Quit.
 struct SettingsMenu: View {
     @ObservedObject var model: ClipboardModel
     let onQuit: () -> Void
+
+    var body: some View {
+        Dropdown {
+            SettingsSwitchRow(title: "Reorder history",
+                              help: "Move a clip to the top each time it is copied again",
+                              isOn: $model.reordersHistory)
+            SettingsSwitchRow(title: "Save images as files",
+                              help: "Keep copied images as PNG files in Pictures › Notch Clipboard, and paste them as files",
+                              isOn: $model.savesImagesAsFiles)
+            DropdownDivider()
+            DropdownRow(title: "Quit Clipboard", action: onQuit)
+        }
+    }
+}
+
+/// One settings line: a name and a switch. Clicking anywhere on the line flips it.
+private struct SettingsSwitchRow: View {
+    let title: String
+    let help: String
+    @Binding var isOn: Bool
     @State private var hovered = false
 
     private var fill: Color {
@@ -73,28 +93,24 @@ struct SettingsMenu: View {
     }
 
     var body: some View {
-        Dropdown {
-            Button { model.reordersHistory.toggle() } label: {
-                HStack(spacing: 8) {
-                    Text("Reorder history")
-                        .font(panelFont(12.5))
-                        .foregroundStyle(Theme.text)
-                    Spacer(minLength: 6)
-                    SwitchToggle(isOn: $model.reordersHistory)
-                }
-                .padding(.horizontal, 10)
-                .frame(height: 30)
-                .background(RoundedRectangle(cornerRadius: 6, style: .continuous).fill(fill))
-                .padding(.horizontal, 5)
-                .contentShape(Rectangle())
-                .background(HoverRegion(cornerRadius: 6) { hovered = $0 })
+        Button { isOn.toggle() } label: {
+            HStack(spacing: 8) {
+                Text(title)
+                    .font(panelFont(12.5))
+                    .foregroundStyle(Theme.text)
+                Spacer(minLength: 6)
+                SwitchToggle(isOn: $isOn)
             }
-            .buttonStyle(.plain)
-            .help("Move a clip to the top each time it is copied again")
-            .accessibilityLabel("Reorder history")
-            .accessibilityValue(model.reordersHistory ? "On" : "Off")
-            DropdownDivider()
-            DropdownRow(title: "Quit Clipboard", action: onQuit)
+            .padding(.horizontal, 10)
+            .frame(height: 30)
+            .background(RoundedRectangle(cornerRadius: 6, style: .continuous).fill(fill))
+            .padding(.horizontal, 5)
+            .contentShape(Rectangle())
+            .background(HoverRegion(cornerRadius: 6) { hovered = $0 })
         }
+        .buttonStyle(.plain)
+        .help(help)
+        .accessibilityLabel(title)
+        .accessibilityValue(isOn ? "On" : "Off")
     }
 }

@@ -9,5 +9,5 @@ fi
 export SDKROOT="$(xcrun --sdk macosx --show-sdk-path)"
 source "$PROJECT_DIR/sources.zsh"
 # Drives the installed, running app with the real pointer. Never presses Clear History.
-xcrun swiftc $SWIFT_TARGET -parse-as-library "$PROJECT_DIR/ClipboardStore.swift" "$PROJECT_DIR/ClipCategory.swift" "$PROJECT_DIR/LiveTests.swift" -o "$TEST_DIR/LiveTests"
+xcrun swiftc $SWIFT_TARGET -parse-as-library "$PROJECT_DIR/ClipboardStore.swift" "$PROJECT_DIR/ClipCategory.swift" "$PROJECT_DIR/ImageFiles.swift" "$PROJECT_DIR/LiveTests.swift" -o "$TEST_DIR/LiveTests"
 "$TEST_DIR/LiveTests"
