@@ -1,0 +1,98 @@
+Notch Clipboard 1.1.1: presentation regression checks (2026-11-17)
+
+The original long-uptime incident could not be reproduced on demand.
+The missing state was tested by forcing stale AppKit visibility reports while
+the native window was hidden. The previous visibility checks accepted that
+state; independent WindowServer hit testing rejects it and renews the surface.
+
+Live full-screen tests require an exposed panel, an independent hit test and
+12 consecutive successful samples. Timings include that stability interval.
+
+PASS: normal desktop (Visible on active Space in 534 ms)
+PASS: first full-screen Space (Visible on active Space in 520 ms)
+PASS: repeat desktop/full-screen transition 1, pointer remains at notch (Visible on active Space in 503 ms)
+PASS: repeat desktop/full-screen transition 2, pointer remains at notch (Visible on active Space in 498 ms)
+PASS: repeat desktop/full-screen transition 3, pointer remains at notch (Visible on active Space in 497 ms)
+PASS: repeat desktop/full-screen transition 4, pointer remains at notch (Visible on active Space in 499 ms)
+PASS: additional full-screen Space 2 (Visible on active Space in 1788 ms)
+PASS: additional full-screen Space 3 (Visible on active Space in 521 ms)
+PASS: existing full-screen switch 1, pointer stays at notch (Visible on active Space in 517 ms)
+PASS: existing full-screen switch 2, pointer stays at notch (Visible on active Space in 519 ms)
+PASS: existing full-screen switch 3, pointer stays at notch (Visible on active Space in 520 ms)
+PASS: existing full-screen switch 4, pointer stays at notch (Visible on active Space in 519 ms)
+PASS: existing full-screen switch 5, pointer stays at notch (Visible on active Space in 525 ms)
+PASS: existing full-screen switch 6, pointer stays at notch (Visible on active Space in 518 ms)
+PASS: existing full-screen switch 7, pointer stays at notch (Visible on active Space in 518 ms)
+PASS: after minimize, restore and full screen (Visible on active Space in 529 ms)
+PASS: complete
+
+PASS: exact notch edges at 1×/2×, shifted displays, inclusive top edge and no fabricated trigger on notchless displays
+PASS: detects a hidden surface even with stale visible/active-Space/occlusion flags
+PASS: fresh native window restores exposure, preserves content and isolates old-window callbacks
+PASS: higher-level system UI does not cause a recovery loop
+PASS: 100 native-window replacements retain the content and remain exposed
+PASS: inactive panel receives hover in 1 ms; exit clears immediately and tracking does not intercept clicks
+
+Rendered UI checks:
+PASS: hovering a row leaves its unsaved bookmark grey and unfilled
+PASS: direct bookmark hover tints its outline dim purple
+PASS: clicking the bookmark fills it and saves without changing the clipboard
+PASS: clicking the row body restores its clipboard item
+
+Remaining verification limit: deterministic fault injection and Space switching
+cannot substitute for hours of normal use. Runtime diagnostics record native
+surface generation, actual exposure and recovery count, without clipboard data.
+
+Installed-app hardware boundary checks:
+PASS: one pixel left does not open the installed app
+PASS: one pixel right does not open the installed app
+PASS: one pixel below does not open the installed app
+PASS: inside left edge opens and exposes the installed app
+PASS: inside right edge opens and exposes the installed app
+PASS: top edge opens and exposes the installed app
+Hardware notch: (593.5, 849.5, 165.0, 28.5), backing scale 2.0
+
+Final native presentation run:
+PASS: exact notch edges at 1×/2×, shifted displays, inclusive top edge and no fabricated trigger on notchless displays
+PASS: detects a hidden surface even with stale visible/active-Space/occlusion flags
+PASS: fresh native window restores exposure, preserves content and isolates old-window callbacks
+PASS: higher-level system UI does not cause a recovery loop
+PASS: 100 native-window replacements retain the content and remain exposed
+PASS: inactive panel receives hover in 1 ms; exit clears immediately and tracking does not intercept clicks
+
+Notch Clipboard 1.1.5: recording-free timing and recovery checks (2026-11-17)
+
+An earlier live stress test caught a WindowServer-translated panel during a
+Space transition: AppKit reported it active while the compositor bounds were
+off-screen. Recovery now distinguishes moving bounds from a settled failure.
+
+PASS: exact notch edges at 1×/2×, shifted displays, inclusive top edge and no fabricated trigger on notchless displays
+PASS: Space-animation motion defers recovery; a surface that stays misplaced still recovers
+PASS: detects a hidden surface even with stale visible/active-Space/occlusion flags
+PASS: fresh native window restores exposure, preserves content and isolates old-window callbacks
+PASS: higher-level system UI does not cause a recovery loop
+PASS: 100 native-window replacements retain the content and remain exposed
+PASS: inactive panel receives hover in 2 ms; exit clears immediately and tracking does not intercept clicks
+PASS: sampling repairs missing enter/exit events, avoids redundant updates and respects disabled or hidden controls
+
+PASS: normal desktop
+PASS: first full-screen Space
+PASS: repeat desktop/full-screen transition 1, pointer remains at notch
+PASS: repeat desktop/full-screen transition 2, pointer remains at notch
+PASS: repeat desktop/full-screen transition 3, pointer remains at notch
+PASS: repeat desktop/full-screen transition 4, pointer remains at notch
+PASS: additional full-screen Space 2
+PASS: additional full-screen Space 3
+PASS: existing full-screen switch 1, pointer stays at notch
+PASS: existing full-screen switch 2, pointer stays at notch
+PASS: existing full-screen switch 3, pointer stays at notch
+PASS: existing full-screen switch 4, pointer stays at notch
+PASS: existing full-screen switch 5, pointer stays at notch
+PASS: existing full-screen switch 6, pointer stays at notch
+PASS: existing full-screen switch 7, pointer stays at notch
+PASS: after minimize, restore and full screen
+PASS: complete
+
+The normal-use timing log is enabled. The specific link between starting
+screen recording and the original intermittent incidents remains unconfirmed.
+Background throttling is a suspect; no App Nap incident has been established.
