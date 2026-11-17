@@ -3,9 +3,7 @@
 Clipboard history that lives in your MacBook's notch.
 Move the pointer to the notch and your recent copies drop down from it.
 
-[![Watch the demo video](docs/media/demo-poster.jpg)](docs/media/notch-clipboard-demo.mp4)
-
-[Watch the demo video (75 s)](docs/media/notch-clipboard-demo.mp4)
+https://github.com/user-attachments/assets/f0c956b4-1e33-4199-9428-56abc49ae804
 
 ## Features
 
